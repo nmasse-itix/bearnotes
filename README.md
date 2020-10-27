@@ -111,6 +111,16 @@ If by any chance, for a note the tool cannot determine a target directory or an 
 
 And if a note receives different configurations by two different tags, the first one wins (by order of tag appearance in the document).
 
+## Filename encoding Between Mac and Linux
+
+If you took your exported notes from a Mac and migrated them on a Linux box, you might encounter some filename encoding issue. 
+Hopefully, `convmv` can fix filenames for you!
+
+```sh
+sudo dnf install convmv
+convmv -f utf-8 -t utf-8 --nfc -r --notest /path/to/bear-notes
+```
+
 ## License
 
 MIT
