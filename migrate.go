@@ -82,13 +82,13 @@ func MigrateNotes(from string, to string, tagFile string) error {
 
 				if tagOption.TargetDirectory != "" && targetDir != "" && targetDir != tagOption.TargetDirectory {
 					log.Printf("WARNING: Target directory '%s' for tag '%s' conflict with directives (%s) from another tag. Continuing with existing value.\n", tagOption.TargetDirectory, tagName, targetDir)
-				} else {
+				} else if targetDir == "" {
 					targetDir = tagOption.TargetDirectory
 				}
 
 				if tagOption.HandlingStrategy != "" && handlingStrategy != "" && handlingStrategy != tagOption.HandlingStrategy {
 					log.Printf("WARNING: Handling strategy '%s' for tag '%s' conflict with directives (%s) from another tag. Continuing with existing value.\n", tagOption.HandlingStrategy, tagName, handlingStrategy)
-				} else {
+				} else if handlingStrategy == "" {
 					if tagOption.HandlingStrategy == "same-folder" || tagOption.HandlingStrategy == "one-note-per-folder" || tagOption.HandlingStrategy == "" {
 						handlingStrategy = tagOption.HandlingStrategy
 					} else {

@@ -7,15 +7,25 @@ import (
 )
 
 func TestNewTag(t *testing.T) {
-	tagContent := "#test/123"
+	tagContent := " #test/123 "
 	tag := NewTag(tagContent, []int{0, len(tagContent)})
 	assert.Equal(t, "test/123", tag.Name, "tag name must be equal")
 
 	// Back to string
-	assert.Equal(t, "#test/123", tag.String(), "tag content must be equal")
+	assert.Equal(t, " #test/123 ", tag.String(), "tag content must be equal")
 
 	tag.Name = ""
-	assert.Equal(t, "", tag.String(), "tag content must be empty")
+	assert.Equal(t, "  ", tag.String(), "tag content must be empty")
+}
+
+func TestNewTagLookAround(t *testing.T) {
+	testCases := [][]string{{" #test/123 ", "test/123"}, {"/#trap ", ""}, {" #trap#", ""}, {"#ok", "ok"}}
+	for _, testCase := range testCases {
+		tagContent := testCase[0]
+		expected := testCase[1]
+		tag := NewTag(tagContent, []int{0, len(tagContent)})
+		assert.Equal(t, expected, tag.Name, "tag name must be equal")
+	}
 }
 
 func TestNewFile(t *testing.T) {
@@ -61,21 +71,29 @@ And some tags in a list
 - #foo/bar@baz
 - #and-a_very%special$one/avec/des/éèà
 
-[it's a trap](https://www.perdu.com/#toto)
+[it's a trap](https://www.perdu.com/#trap)
+
+Another trap: https://www.perdu.com/#trap 
 
 another trap: world #1
+
+Traps, traps, traps... #trap#trap 
+
+#two-tags #one-after-another
 
 #end`
 
 	note := LoadNote(md)
 
 	// Tags
-	assert.Len(t, note.Tags, 5, "There must be 5 tags")
+	assert.Len(t, note.Tags, 7, "There must be 7 tags")
 	assert.Equal(t, "tag", note.Tags[0].Name, "first tag must be 'tag'")
 	assert.Equal(t, "foo", note.Tags[1].Name, "second tag must be 'foo'")
 	assert.Equal(t, "foo/bar@baz", note.Tags[2].Name, "third tag must be 'foo/bar@baz'")
 	assert.Equal(t, "and-a_very%special$one/avec/des/éèà", note.Tags[3].Name, "fourth tag must be 'and-a_very%special$one/avec/des/éèà'")
-	assert.Equal(t, "end", note.Tags[4].Name, "fifth tag must be 'end'")
+	assert.Equal(t, "two-tags", note.Tags[4].Name, "fifth tag must be 'two-tags'")
+	assert.Equal(t, "one-after-another", note.Tags[5].Name, "sixth tag must be 'one-after-another'")
+	assert.Equal(t, "end", note.Tags[6].Name, "seventh tag must be 'end'")
 
 	// Files
 	assert.Len(t, note.Files, 2, "There must be 2 files")
@@ -89,7 +107,7 @@ another trap: world #1
 
 	// Alter tags, files and images
 	note.Tags[1].Name = ""
-	note.Tags[4].Name = "not-really"
+	note.Tags[6].Name = "not-really"
 	note.Files[0].Location = "note2/my file.pdf"
 	note.Files[1].Location = "note2/my other file.pdf"
 	note.Images[0].Location = "note2/image 2.jpg"
@@ -118,9 +136,15 @@ And some tags in a list
 - #foo/bar@baz
 - #and-a_very%special$one/avec/des/éèà
 
-[it's a trap](https://www.perdu.com/#toto)
+[it's a trap](https://www.perdu.com/#trap)
+
+Another trap: https://www.perdu.com/#trap 
 
 another trap: world #1
+
+Traps, traps, traps... #trap#trap 
+
+#two-tags #one-after-another
 
 #not-really`
 	newNote := note.WriteNote()

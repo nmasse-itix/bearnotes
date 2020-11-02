@@ -15,6 +15,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Regular expression to detect Bear tags.
@@ -32,9 +34,10 @@ var reFile *regexp.Regexp
 var reImage *regexp.Regexp
 
 func init() {
-	// This regex has a catch: it catches a leading and trailing extra character.
+	// This regex has a catch: it matches a leading and trailing extra character.
 	// This is because Go does not support look-ahead/look-behind markers.
-	reTag = regexp.MustCompile(`(^|\s)#([\p{L}][-\p{L}\p{N}/$_§%=+°({[\\@]*)($|\s)`)
+	// So we need to implement look-ahead/look-behind by ourself.
+	reTag = regexp.MustCompile(`(^|.?)#([\p{L}][-\p{L}\p{N}/$_§%=+°({[\\@]*)(.?|$)`)
 
 	// Those two regex are straightforward
 	reFile = regexp.MustCompile(`<a +href=['"]([^'"]+)['"]>([^<]+)</a>`)
@@ -47,9 +50,9 @@ type Tag struct {
 	Name string
 	// Position of this tag in the Markdown file
 	position []int
-	// The character before the tag (see Regex description above)
+	// The character before the tag (for look-ahead, see Regex description above)
 	before string
-	// The character after the tag (see Regex description above)
+	// The character after the tag (for look-behind, see Regex description above)
 	after string
 }
 
@@ -57,12 +60,22 @@ type Tag struct {
 // characters) and position in file.
 func NewTag(content string, position []int) Tag {
 	var tag Tag
-	tag.position = position
 	parts := reTag.FindStringSubmatch(content)
 	if len(parts) > 0 {
-		tag.before = parts[1]
-		tag.Name = parts[2]
-		tag.after = parts[3]
+		beforeIsEmpty := len(parts[1]) == 0
+		before, _ := utf8.DecodeRuneInString(parts[1])
+		beforeIsSpace := unicode.IsSpace(before)
+		afterIsEmpty := len(parts[3]) == 0
+		after, _ := utf8.DecodeRuneInString(parts[3])
+		afterIsSpace := unicode.IsSpace(after)
+
+		// A valid tag is surrounded by either a space character or nothing
+		if (beforeIsEmpty || beforeIsSpace) && (afterIsEmpty || afterIsSpace) {
+			tag.position = position
+			tag.before = parts[1]
+			tag.Name = parts[2]
+			tag.after = parts[3]
+		}
 	}
 	return tag
 }
@@ -151,7 +164,10 @@ func LoadNote(content string) *Note {
 	var note Note
 	note.content = content
 	for _, match := range reTag.FindAllStringIndex(content, -1) {
-		note.Tags = append(note.Tags, NewTag(content[match[0]:match[1]], match))
+		tag := NewTag(content[match[0]:match[1]], match)
+		if len(tag.Name) > 0 {
+			note.Tags = append(note.Tags, tag)
+		}
 	}
 	for _, match := range reFile.FindAllStringIndex(content, -1) {
 		note.Files = append(note.Files, NewFile(content[match[0]:match[1]], match))
