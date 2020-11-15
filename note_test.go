@@ -60,6 +60,7 @@ func TestLoadNote(t *testing.T) {
 
 ![an image](note/image%202.jpg)
 ![](note/no-alt.jpg)
+![](note_with_nested(parenthesis)/test.jpg)
 
 ## Tags
 
@@ -101,9 +102,10 @@ Traps, traps, traps... #trap#trap
 	assert.Equal(t, "my other file.pdf", note.Files[1].Name, "second file must be 'my other file.pdf'")
 
 	// Images
-	assert.Len(t, note.Images, 2, "There must be 2 images")
+	assert.Len(t, note.Images, 3, "There must be 3 images")
 	assert.Equal(t, "note/image 2.jpg", note.Images[0].Location, "first image must be 'note/image 2.jpg'")
 	assert.Equal(t, "note/no-alt.jpg", note.Images[1].Location, "second image must be 'note/no-alt.jpg'")
+	assert.Equal(t, "note_with_nested(parenthesis)/test.jpg", note.Images[2].Location, "third image must be 'note_with_nested(parenthesis)/test.jpg'")
 
 	// Alter tags, files and images
 	note.Tags[1].Name = ""
@@ -125,6 +127,7 @@ Traps, traps, traps... #trap#trap
 
 ![an image](note2/image%202.jpg)
 ![](note2/no-alt.jpg)
+![](note_with_nested%28parenthesis%29/test.jpg)
 
 ## Tags
 

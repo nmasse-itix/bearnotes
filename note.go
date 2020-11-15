@@ -41,7 +41,7 @@ func init() {
 
 	// Those two regex are straightforward
 	reFile = regexp.MustCompile(`<a +href=['"]([^'"]+)['"]>([^<]+)</a>`)
-	reImage = regexp.MustCompile(`!\[([^\]]*)]\(([^(]+)\)`)
+	reImage = regexp.MustCompile(`!\[([^\]]*)]\(([^())]+|[^(]+\([^)]+\)[^)]+)\)`)
 }
 
 // Tag represents a Bear tag (#foo)
